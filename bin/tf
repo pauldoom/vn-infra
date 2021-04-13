@@ -26,11 +26,12 @@ check_required_bins() {
 }
 
 assure_state_bucket() {
-    local STATE_BUCKET="$1"
+    local REGION=$1
+    local STATE_BUCKET=$2
     if aws s3 ls s3://$STATE_BUCKET >/dev/null 2>&1; then
         echo "Detected bucket $STATE_BUCKET"
     else
-        aws s3 mb s3://$STATE_BUCKET
+        aws s3 --region $REGION mb s3://$STATE_BUCKET
         echo "Created bucket $STATE_BUCKET"
     fi
 }
@@ -44,35 +45,37 @@ track_state_bucket() {
 }
 
 assure_lock_table() {
-    local LOCK_TABLE="$1"
-    if aws dynamodb describe-table --table-name $LOCK_TABLE >/dev/null 2>&1 ; then
+    local REGION=$1
+    local LOCK_TABLE=$2
+    if aws dynamodb describe-table --region $REGION --table-name $LOCK_TABLE >/dev/null 2>&1 ; then
         echo "Detected lock table $LOCK_TABLE"
     else
         aws dynamodb create-table \
+          --region $REGION \
           --table-name $LOCK_TABLE \
           --attribute-definitions AttributeName=LockID,AttributeType=S \
           --key-schema AttributeName=LockID,KeyType=HASH \
           --sse-specification Enabled=true \
           --provisioned-throughput ReadCapacityUnits=2,WriteCapacityUnits=1 > /dev/null 2>&1
 
-	    aws dynamodb wait table-exists --table-name $LOCK_TABLE
+	    aws dynamodb wait table-exists --region $REGION --table-name $LOCK_TABLE
         
         echo "Created lock table $LOCK_TABLE"
     fi
 }
 
 track_lock_table() {
-    local LOCK_TABLE="$1"
-    terraform import aws_dynamodb_table.tf_lock "$LOCK_TABLE" > /dev/null 2>&1 || true
+    local LOCK_TABLE=$1
+    terraform import aws_dynamodb_table.tf_lock $LOCK_TABLE > /dev/null 2>&1 || true
     echo "Tracking $LOCK_TABLE in $(terraform state list aws_dynamodb_table.tf_lock)"  
 }
 
 terraform_init() {
-    local REGION="$1"
-    local STATE_BUCKET="$2"
-    local LOCK_TABLE="$3"
-    local STACK_NAME="$4"
-    terraform init -backend-config="bucket=$STATE_BUCKET" \
+    local REGION=$1
+    local STATE_BUCKET=$2
+    local LOCK_TABLE=$3
+    local STACK_NAME=$4
+    terraform init --backend-config="bucket=$STATE_BUCKET" \
       -backend-config="key=$STACK_NAME" \
       -backend-config="dynamodb_table=$LOCK_TABLE" \
       -backend-config="region=$REGION"
@@ -96,15 +99,15 @@ main() {
     # Make AWS region available as var.region in Terraform
     # Uses AWS_REGION var if set else guesses from the [default] section
     # in ~/.aws/config
-    export TF_region=${AWS_REGION:-$(aws configure get region --profile default)}
-    echo "Region: $TF_region"
+    export TF_VAR_region=${AWS_REGION:-$(aws configure get region --profile default)}
+    echo "Region: $TF_VAR_region"
 
-    STATE_BASE=${STATE_BASE:-"vn-infra-state"}-$TF_region
+    STATE_BASE=${STATE_BASE:-"vn-infra-state"}-$TF_VAR_region
 
 
     # Set unique state bucket name and expose to Terraform
     # as var.state_bucket
-    export TF_state_bucket=$STATE_BASE-$(echo "$STATE_BASE:$ACCOUNT_ID" | sha1sum | head -c8)
+    export TF_VAR_state_bucket=$STATE_BASE-$(echo "$STATE_BASE:$ACCOUNT_ID" | sha1sum | head -c8)
 
     STACK=$1
 
@@ -113,7 +116,7 @@ main() {
 
     # Set lock table name and expose to Terraform as
     # var.lock_table
-    export TF_lock_table=$STATE_BASE-$STACK_NAME-lock
+    export TF_VAR_lock_table=$STATE_BASE-$STACK_NAME-lock
 
     SCRIPT_DIR=$(dirname "$0")
     FULL_STACK_DIR=$(dirname $SCRIPT_DIR)/stacks/$STACK
@@ -124,30 +127,31 @@ main() {
     fi
 
     # Enter our actual stack dir
-    pushd "$FULL_STACK_DIR" > /dev/null 2>&1
+    pushd $FULL_STACK_DIR > /dev/null 2>&1
 
     # Setup to return to the current dir after exit
     trap cleanup EXIT
 
     # Make sure state bucket exists
-    assure_state_bucket "$TF_state_bucket"
+    assure_state_bucket $TF_VAR_region $TF_VAR_state_bucket
  
     # Make sure lock table exists
-    assure_lock_table "$TF_lock_table"
+    assure_lock_table $TF_VAR_region $TF_VAR_lock_table
 
     # Initialize Terraform with backend
-    terraform_init "$TF_region" "$TF_state_bucket" "$TF_lock_table" "$STACK_NAME"
-    
+    terraform_init $TF_VAR_region $TF_VAR_state_bucket $TF_VAR_lock_table $STACK_NAME
+
     # Track state bucket only for special "accunt" level stack
     if [ "$STACK" = "account" ]; then
-        track_state_bucket "$TF_state_bucket"
+        track_state_bucket $TF_VAR_state_bucket
     fi
 
     # Always track lock table
-    track_lock_table "$TF_lock_table"
+    track_lock_table $TF_VAR_lock_table
 
     # And now do what was asked
-    echo terraform $*
+    shift 1
+    terraform $*
 }
 
 main $*
