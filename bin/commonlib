@@ -24,10 +24,10 @@ init_tf_vars() {
     GUISHID=$(echo "$TF_VAR_infra_name:$TF_VAR_region:$TF_VAR_account_id" | sha1sum | head -c8)
 
     # S3 bucket to store state under
-    export TF_VAR_state_bucket=$TF_VAR_infra_name-$TF_VAR_region-$GUISHID
+    export TF_VAR_state_bucket=$TF_VAR_infra_name-state-$TF_VAR_region-$GUISHID
 
     # DynamoDB lock table name
-    export TF_VAR_lock_table=$TF_VAR_infra_name-$TF_VAR_region-$TF_VAR_stack_name-lock
+    export TF_VAR_lock_table=$TF_VAR_infra_name-lock-$TF_VAR_region
 }
 
 assure_state_bucket() {
