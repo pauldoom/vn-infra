@@ -1,0 +1,52 @@
+#!/bin/bash
+
+# Ensures a state bucket and lock table exist
+set -euo pipefail
+
+usage() {
+  cat >&2 <<EOM
+usage: $(basename "$0") [STACK]
+
+Ensures S3 bucket for state and DynamoDB lock table are present.
+Idempotent!
+
+STACK: Stack name under stacks/ directory
+
+Requires AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY to be set.
+EOM
+}
+
+main() {
+    if [ -z "${1:-}" ]; then
+        usage
+        exit 1
+    fi
+
+    STACK=$1
+
+    SCRIPT_DIR=$(dirname "$0")
+    . $SCRIPT_DIR/commonlib
+
+    check_required_bins aws
+
+    FULL_STACK_DIR=$(dirname $SCRIPT_DIR)/stacks/$STACK
+
+    if [ ! -d $FULL_STACK_DIR ]; then
+        echo "FATAL: No stack directory found at $FULL_STACK_DIR"
+        exit 1
+    fi
+
+    # Friendly top level name
+    INFRA_NAME=${INFRA_NAME:-$(cat $SCRIPT_DIR/../.infra_name)}
+
+    # Initialize TF_VAR_ variables
+    init_tf_vars $INFRA_NAME $STACK
+
+    # Make sure state bucket exists
+    assure_state_bucket $TF_VAR_region $TF_VAR_state_bucket
+ 
+    # Make sure lock table exists
+    assure_lock_table $TF_VAR_region $TF_VAR_lock_table
+}
+
+main $*

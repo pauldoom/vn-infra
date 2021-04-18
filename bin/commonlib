@@ -1,0 +1,87 @@
+# Common functions to compose various IaC processes
+
+check_required_bins() {
+    for i in $*; do
+        which $i > /dev/null || (echo "Missing command: $i" && exit 1)
+    done
+}
+
+init_tf_vars() {
+    # Uses infra name and stack and exports a set of vars for futher script
+    # and Terraform use
+    export TF_VAR_infra_name=$1
+    export TF_VAR_stack=$2
+
+    export TF_VAR_stack_name=$(echo $TF_VAR_stack | tr '/' '_')
+
+    export TF_VAR_account_id=${ACCOUNT_ID:-$(aws sts get-caller-identity --query Account --output text)}
+
+    # Uses AWS_REGION var if set else guesses from the [default] section
+    # in ~/.aws/config
+    export TF_VAR_region=${AWS_DEFAULT_REGION:-$(aws configure get region --profile default)}
+    
+    # Unique per-account suffix to add - S3 names have to be unique
+    GUISHID=$(echo "$TF_VAR_infra_name:$TF_VAR_region:$TF_VAR_account_id" | sha1sum | head -c8)
+
+    # S3 bucket to store state under
+    export TF_VAR_state_bucket=$TF_VAR_infra_name-$TF_VAR_region-$GUISHID
+
+    # DynamoDB lock table name
+    export TF_VAR_lock_table=$TF_VAR_infra_name-$TF_VAR_region-$TF_VAR_stack_name-lock
+}
+
+assure_state_bucket() {
+    local REGION=$1
+    local STATE_BUCKET=$2
+    if aws s3 ls s3://$STATE_BUCKET >/dev/null 2>&1; then
+        echo "Detected bucket $STATE_BUCKET"
+    else
+        aws s3 --region $REGION mb s3://$STATE_BUCKET
+        echo "Created bucket $STATE_BUCKET"
+    fi
+}
+
+track_state_bucket() {
+    local STATE_BUCKET=$1
+    # Checking for the state is meh, so just try to import it
+    terraform import aws_s3_bucket.tf_state "$STATE_BUCKET" > /dev/null 2>&1 || true
+    # Now return that state so this explodes if the import failed
+    echo "Tracking $STATE_BUCKET in $(terraform state list aws_s3_bucket.tf_state)"
+}
+
+assure_lock_table() {
+    local REGION=$1
+    local LOCK_TABLE=$2
+    if aws dynamodb describe-table --region $REGION --table-name $LOCK_TABLE >/dev/null 2>&1 ; then
+        echo "Detected lock table $LOCK_TABLE"
+    else
+        aws dynamodb create-table \
+          --region $REGION \
+          --table-name $LOCK_TABLE \
+          --attribute-definitions AttributeName=LockID,AttributeType=S \
+          --key-schema AttributeName=LockID,KeyType=HASH \
+          --sse-specification Enabled=true \
+          --provisioned-throughput ReadCapacityUnits=2,WriteCapacityUnits=1 > /dev/null 2>&1
+
+	    aws dynamodb wait table-exists --region $REGION --table-name $LOCK_TABLE
+        
+        echo "Created lock table $LOCK_TABLE"
+    fi
+}
+
+track_lock_table() {
+    local LOCK_TABLE=$1
+    terraform import aws_dynamodb_table.tf_lock $LOCK_TABLE > /dev/null 2>&1 || true
+    echo "Tracking $LOCK_TABLE in $(terraform state list aws_dynamodb_table.tf_lock)"  
+}
+
+terraform_init() {
+    local REGION=$1
+    local STATE_BUCKET=$2
+    local LOCK_TABLE=$3
+    local STACK_NAME=$4
+    terraform init --backend-config="bucket=$STATE_BUCKET" \
+      -backend-config="key=$STACK_NAME" \
+      -backend-config="dynamodb_table=$LOCK_TABLE" \
+      -backend-config="region=$REGION"
+}
