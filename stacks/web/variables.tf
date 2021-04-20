@@ -1,5 +1,5 @@
-variable "lock_table" {
-  description = "DynamoDB table to use for Terraform locking"
+variable "bucket_suffix" {
+  description = "Name to append to end of S3 bucket name for global uniqueness"
   type        = string
 }
 
@@ -14,12 +14,17 @@ variable "region" {
   default     = "us-east-1"
 }
 
+variable "environ" {
+  type    = string
+  default = "dev"
+}
+
 variable "root_zone" {
   description = "Parent DNS zone name"
   type        = string
 }
 
-variable "state_bucket" {
-  description = "S3 bucket to store Terraform state in"
+variable "static_site_fqdn" {
+  description = "FQDN of static site"
   type        = string
 }

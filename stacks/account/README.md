@@ -1,1 +1,1 @@
-Special account stack for account global resources.
+Special account level stack for account global resources.

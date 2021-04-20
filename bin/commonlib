@@ -23,11 +23,16 @@ init_tf_vars() {
     # Unique per-account suffix to add - S3 names have to be unique
     GUISHID=$(echo "$TF_VAR_infra_name:$TF_VAR_region:$TF_VAR_account_id" | sha1sum | head -c8)
 
+    # S3 bucket name suffix for all buckets
+    export TF_VAR_bucket_suffix=$TF_VAR_region-$GUISHID
     # S3 bucket to store state under
-    export TF_VAR_state_bucket=$TF_VAR_infra_name-state-$TF_VAR_region-$GUISHID
+    export TF_VAR_state_bucket=$TF_VAR_infra_name-state-$TF_VAR_bucket_suffix
 
     # DynamoDB lock table name
     export TF_VAR_lock_table=$TF_VAR_infra_name-lock-$TF_VAR_region
+
+    # S3 bucket to store logs under
+    export TF_VAR_log_bucket=$TF_VAR_infra_name-logs-$TF_VAR_bucket_suffix
 }
 
 assure_state_bucket() {

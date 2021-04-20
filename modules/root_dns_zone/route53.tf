@@ -1,5 +1,5 @@
-resource "aws_route53_zone" "root_domain" {
-  name = replace(var.root_domain, "/\\.?$/", ".")
+resource "aws_route53_zone" "root_zone" {
+  name = replace(var.root_zone, "/\\.?$/", ".")
 }
 
 # resource "aws_route53_record" "static_rrs" {
@@ -23,10 +23,10 @@ resource "aws_route53_zone" "root_domain" {
 
 output "root_zone_id" {
   description = "Root Zone ID"
-  value       = aws_route53_zone.root_domain.zone_id
+  value       = aws_route53_zone.root_zone.zone_id
 }
 
 output "root_zone_nameservers" {
   description = "Root zone NS servers"
-  value = aws_route53_zone.root_domain.name_servers
+  value = aws_route53_zone.root_zone.name_servers
 }

@@ -4,7 +4,7 @@ variable "region" {
   default     = "us-east-1"
 }
 
-variable "root_domain" {
+variable "root_zone" {
   description = "Top level DNS zone name"
 }
 
