@@ -28,5 +28,5 @@ output "root_zone_id" {
 
 output "root_zone_nameservers" {
   description = "Root zone NS servers"
-  value = aws_route53_zone.root_zone.name_servers
+  value       = aws_route53_zone.root_zone.name_servers
 }

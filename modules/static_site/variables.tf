@@ -23,6 +23,11 @@ variable "log_bucket" {
   type        = string
 }
 
+variable "redirect_lambda_arn" {
+  description = "ARN for Lambda to run at edge for handling redirects / defaults"
+  type        = string
+}
+
 variable "root_zone" {
   description = "Parent DNS zone name"
   type        = string

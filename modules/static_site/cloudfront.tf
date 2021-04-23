@@ -15,14 +15,20 @@ resource "aws_cloudfront_distribution" "static_site" {
 
   enabled         = true
   is_ipv6_enabled = true
-  aliases         = [var.fqdn]
+  aliases         = [var.fqdn, "www.${var.fqdn}"]
 
-  default_root_object = "/index.html"
+  default_root_object = "index.html"
 
   default_cache_behavior {
     allowed_methods  = ["HEAD", "GET"]
     cached_methods   = ["HEAD", "GET"]
     target_origin_id = "static-${var.environ}"
+
+    lambda_function_association {
+      event_type   = "origin-request"
+      lambda_arn   = var.redirect_lambda_arn
+      include_body = false
+    }
 
     forwarded_values {
       query_string = false
@@ -32,7 +38,10 @@ resource "aws_cloudfront_distribution" "static_site" {
       }
     }
 
-    min_ttl                = 0
+    min_ttl     = 0
+    default_ttl = 86400
+    max_ttl     = 31536000
+
     viewer_protocol_policy = "https-only"
     compress               = true
   }
@@ -48,6 +57,12 @@ resource "aws_cloudfront_distribution" "static_site" {
     geo_restriction {
       restriction_type = "none"
     }
+  }
+  custom_error_response {
+    error_code            = 403
+    response_code         = 200
+    error_caching_min_ttl = 0
+    response_page_path    = "/"
   }
 
   # Log to ELB log bucket to keep front end AWS logs together.
