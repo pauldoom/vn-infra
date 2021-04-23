@@ -1,5 +1,6 @@
 resource "aws_acm_certificate" "cert" {
-  domain_name       = var.fqdn
+  domain_name               = var.fqdn
+  subject_alternative_names = var.alternate_fqdns
 
   validation_method = "DNS"
 

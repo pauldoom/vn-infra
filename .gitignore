@@ -1,2 +1,11 @@
+# Local cache
 .terraform/
+
+# Zips of functions
+functions/*.zip
+
+# Local test variables
 local.tfvars
+
+# Cached plans
+plans/

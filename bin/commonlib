@@ -14,7 +14,7 @@ init_tf_vars() {
 
     export TF_VAR_stack_name=$(echo $TF_VAR_stack | tr '/' '_')
 
-    export TF_VAR_account_id=${ACCOUNT_ID:-$(aws sts get-caller-identity --query Account --output text)}
+    export TF_VAR_account_id=${AWS_ACCOUNT_ID:-$(aws sts get-caller-identity --query Account --output text)}
 
     # Uses AWS_REGION var if set else guesses from the [default] section
     # in ~/.aws/config
