@@ -22,6 +22,7 @@ stages:
 
 before_script:
   # Sets up additional environment variables
+  - mkdir plans
   - . bin/commonlib
   - init_tf_vars $TF_VAR_infra_name $CI_ENVIRONMENT_NAME
   - cd stacks/$CI_ENVIRONMENT_NAME
