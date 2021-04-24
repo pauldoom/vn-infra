@@ -4,8 +4,8 @@
 # Zips of functions
 functions/*.zip
 
-# Local test variables
-local.tfvars
+# Local files for workstation or temporary CI/CD use
+local.*
 
 # Cached plans
 plans/

@@ -23,3 +23,9 @@ variable "state_bucket" {
   description = "S3 bucket to store Terraform state in"
   type        = string
 }
+
+variable "static_dns_record_file" {
+  description = "Optional Yaml file with static DNS records for root zone"
+  type        = string
+  default     = ""
+}

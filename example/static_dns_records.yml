@@ -1,0 +1,25 @@
+---
+# Sample static_dns_records_file
+#
+# Creates the following records under the root_dns_zone:
+#
+#        A 172.16.1.2
+# fred   A 192.168.1.1
+# frex   MX  1 bozomail.net.
+# fred   MX  10 smtp.cloudmail.org.
+#
+- name: ""
+  type: a
+  records:
+  - 172.16.1.2
+- name: fred
+  type: a
+  ttl: 3600
+  records:
+  - 192.168.1.1
+- name: fred
+  type: mx
+  records:
+  - 1 bozomail.net.
+  - 10 smtp.cloudmail.org.
+

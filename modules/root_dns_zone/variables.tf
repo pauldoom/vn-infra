@@ -13,11 +13,19 @@ variable "default_ttl" {
   type        = string
   default     = "300"
 }
+terraform {
+  # Allow use of optional() below
+  experiments = [module_variable_optional_attrs]
+}
 
-variable "static_rrs" {
+variable "static_records" {
   description = "List of additional resource records to manage for zone"
-  type        = list(map(string))
-
+  type = list(object({
+    name    = string,
+    type    = string,
+    ttl     = optional(string),
+    records = list(string)
+  }))
   # Each entry is a map with a name, type, and list of records (values)
   # You can supply and optional TTL.
   #
@@ -35,8 +43,11 @@ variable "static_rrs" {
   #     name    = "fritters",
   #     type    = "CNAME",
   #     records = ["donuts.fqdn."],
-  #   }
+  #   },
+  #     # Record with name of root and the default ttl
+  #     name    = "",
+  #     type    = "A",
+  #     records = ["10.11.12.14"]
   # ]
-
   default = []
 }
