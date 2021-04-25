@@ -61,8 +61,12 @@ check_fmt:
       esac
   artifacts:
     paths:
+      # Saved plans
       - plans
+      # Local copy of .terraform dir
       - stacks/${CI_ENVIRONMENT_NAME}/.terraform
+      # Zipped function code
+      - functions/*.zip
     reports:
       dotenv: changed.env
 
