@@ -23,7 +23,7 @@ stages:
   - account_apply
 
 before_script:
-  # Sets up additional environment variables
+  # Default setup for most stages
   - mkdir -p plans
   - . bin/commonlib
   - init_tf_vars $TF_VAR_infra_name $CI_ENVIRONMENT_NAME
@@ -35,8 +35,8 @@ before_script:
     -backend-config="region=${TF_VAR_region}"
 
 check_fmt:
-  before_script: []
   stage: check_fmt
+  before_script: []
   script:
     - terraform fmt -recursive -diff -check
   except:
@@ -44,9 +44,12 @@ check_fmt:
 
 account_tfsec:
   stage: account_tfsec
+  before_script:
+    - . bin/commonlib
+    - init_tf_vars $TF_VAR_infra_name $CI_ENVIRONMENT_NAME
   image: tfsec/tfsec-ci
   script:
-    - tfsec stacks/account
+    - tfsec stacks/$CI_ENVIRONMENT_NAME
 
 account_plan:
   environment: account
