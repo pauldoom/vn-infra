@@ -91,6 +91,10 @@ account:plan:
   stage: build
   needs:
     - job: account:tfsec
+  rules:
+    - changes:
+      - stacks/account
+      - modules
 
 account:apply:
   extends: .apply
@@ -101,6 +105,9 @@ account:apply:
       artifacts: true
   rules:
     - if: '$CI_COMMIT_BRANCH == "main" && $CHANGED == "true"'
+      changes:
+      - stacks/account
+      - modules
       when: manual
 
 # Static web site
@@ -110,7 +117,7 @@ web:tfsec:
   stage: test
   rules:
     - changes:
-      - stacks/account
+      - stacks/web
       - modules
 
 web:plan:
@@ -119,6 +126,10 @@ web:plan:
   stage: build
   needs:
     - job: web:tfsec
+  rules:
+    - changes:
+      - stacks/web
+      - modules
 
 web:apply:
   extends: .apply
@@ -129,3 +140,6 @@ web:apply:
       artifacts: true
   rules:
     - if: '$CI_COMMIT_BRANCH == "main" && $CHANGED == "true"'
+      changes:
+      - stacks/web
+      - modules
