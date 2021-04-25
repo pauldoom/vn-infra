@@ -1,6 +1,9 @@
+# The apex DNS zone
 resource "aws_route53_zone" "root_zone" {
   name = replace(var.root_zone, "/\\.?$/", ".")
 }
+
+# Optional static records under the apex zone
 resource "aws_route53_record" "static_records" {
   for_each = { for r in var.static_records :
     join(":", [lower(r.type), r.name]) => r
