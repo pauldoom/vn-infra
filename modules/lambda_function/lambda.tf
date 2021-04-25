@@ -2,6 +2,9 @@
 # Code adapted from https://github.com/twstewart42/terraform-aws-cloudfront-s3-website-lambda-edge
 # Used under Apache 2.0 license
 
+data "aws_region" "current" {
+}
+
 data "archive_file" "lambda_zip" {
   type        = "zip"
   output_path = "${path.module}/../../functions/${var.function_name}.zip"
@@ -53,13 +56,22 @@ resource "aws_iam_role" "lambda_execution" {
 EOF
 }
 
+resource "aws_cloudwatch_log_group" "function" {
+  name              = "/aws/lambda/${data.aws_region.current.name}.${var.environ}_${var.function_name}"
+  retention_in_days = 30
+}
+
 resource "aws_lambda_function" "function" {
   description      = "Managed by Terraform"
   filename         = "${path.module}/../../functions/${var.function_name}.zip"
-  function_name    = var.function_name
+  function_name    = "${var.environ}_${var.function_name}"
   handler          = var.function_entrypoint
   source_code_hash = data.archive_file.lambda_zip.output_base64sha256
   publish          = true
   role             = aws_iam_role.lambda_execution.arn
   runtime          = var.runtime
+
+  depends_on = [
+    aws_cloudwatch_log_group.function
+  ]
 }

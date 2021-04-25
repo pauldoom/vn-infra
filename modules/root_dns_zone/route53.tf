@@ -8,7 +8,7 @@ resource "aws_route53_record" "static_records" {
 
   name    = each.value.name == "" ? var.root_zone : join(".", [each.value.name, var.root_zone])
   type    = upper(each.value.type)
-  ttl     = each.value.ttl == null ? each.value.ttl : "300"
+  ttl     = each.value.ttl == null ? "300": each.value.ttl
   records = each.value.records
   zone_id = aws_route53_zone.root_zone.zone_id
 }
