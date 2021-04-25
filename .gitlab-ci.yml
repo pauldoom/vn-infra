@@ -34,21 +34,23 @@ before_script:
     -backend-config="region=${TF_VAR_region}"
 
 # Universal stages
-check_fmt:
+test:fmt:
   stage: test
   before_script: []
   script:
     - terraform fmt -recursive -diff -check
 
-# Templates
-.tfsec:
+# Run tfsec on everything at
+test:tfsec:
+  stage: test
   image: tfsec/tfsec-ci
   before_script:
     - . bin/commonlib
-    - init_tf_vars $TF_VAR_infra_name $CI_ENVIRONMENT_NAME
+    - init_tf_vars $TF_VAR_infra_name account
   script:
-    - tfsec stacks/$CI_ENVIRONMENT_NAME
+    - tfsec stacks
 
+# Templates
 .plan:
   script:
     - terraform plan -detailed-exitcode
@@ -76,61 +78,32 @@ check_fmt:
       ${CI_PROJECT_DIR}/plans/${CI_ENVIRONMENT_NAME}.plan
     
 # Prod account level resources
-account:tfsec:
-  extends: .tfsec
-  environment: account
-  stage: test
-  rules:
-    - changes:
-      - stacks/account
-      - modules
-      - versions
-
-account:plan:
+plan:account:
   extends: .plan
   environment: account
   stage: build
-  needs:
-    - job: account:tfsec
   rules:
     - changes:
       - stacks/account
       - modules
       - versions
 
-account:apply:
+apply:account:
   extends: .apply
   environment: account
   stage: deploy
   needs:
-    - job: account:plan
+    - job: plan:account
       artifacts: true
   rules:
     - if: '$CI_COMMIT_BRANCH == "main" && $CHANGED == "true"'
-      changes:
-      - stacks/account
-      - modules
-      - versions
       when: manual
 
 # Static web site
-web:tfsec:
-  extends: .tfsec
-  environment: web
-  stage: test
-  rules:
-    - changes:
-      - stacks/web
-      - modules
-      - functions
-      - versions
-
-web:plan:
+plan:web:
   extends: .plan
   environment: web
   stage: build
-  needs:
-    - job: web:tfsec
   rules:
     - changes:
       - stacks/web
@@ -138,17 +111,12 @@ web:plan:
       - functions
       - versions
 
-web:apply:
+apply:web:
   extends: .apply
   environment: web
   stage: deploy
   needs:
-    - job: web:plan
+    - job: plan:web
       artifacts: true
   rules:
     - if: '$CI_COMMIT_BRANCH == "main" && $CHANGED == "true"'
-      changes:
-      - stacks/web
-      - modules
-      - functions
-      - versions
