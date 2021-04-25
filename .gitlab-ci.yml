@@ -55,10 +55,11 @@ check_fmt:
       -out ${CI_PROJECT_DIR}/plans/${CI_ENVIRONMENT_NAME}.plan
       || exit_code=$?
     - case $exit_code in
-        0) echo "CHANGED=false" >> plan.env;;
         1) exit 1;;
         2) echo "CHANGED=true" >> plan.env;;
-      esac  
+        *) echo "CHANGED=false" >> plan.env;;
+      esac
+    - cat plan.env
   artifacts:
     paths:
       - plans
@@ -84,6 +85,8 @@ account:plan:
   extends: .plan
   environment: account
   stage: build
+  needs:
+    - job: account:tfsec
 
 account:apply:
   extends: .apply
@@ -106,6 +109,8 @@ web:plan:
   extends: .plan
   environment: web
   stage: build
+  needs:
+    - job: web:tfsec
 
 web:apply:
   extends: .apply
