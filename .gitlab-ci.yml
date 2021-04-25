@@ -74,15 +74,16 @@ check_fmt:
   script:
     - terraform apply -auto-approve
       ${CI_PROJECT_DIR}/plans/${CI_ENVIRONMENT_NAME}.plan
-  only:
-    variables:
-      - $CHANGED == "true"
     
 # Prod account level resources
 account:tfsec:
   extends: .tfsec
   environment: account
   stage: test
+  rules:
+    - changes:
+      - stacks/account
+      - modules
 
 account:plan:
   extends: .plan
@@ -98,16 +99,19 @@ account:apply:
   needs:
     - job: account:plan
       artifacts: true
-  when: manual
-  only:
-    refs:
-      - main
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main" && $CHANGED == "true"'
+      when: manual
 
 # Static web site
 web:tfsec:
   extends: .tfsec
   environment: web
   stage: test
+  rules:
+    - changes:
+      - stacks/account
+      - modules
 
 web:plan:
   extends: .plan
@@ -123,6 +127,5 @@ web:apply:
   needs:
     - job: web:plan
       artifacts: true
-  only:
-    refs:
-      - main
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main" && $CHANGED == "true"'
