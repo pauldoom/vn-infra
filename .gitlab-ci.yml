@@ -82,11 +82,6 @@ plan:account:
   extends: .plan
   environment: account
   stage: build
-  rules:
-    - changes:
-      - stacks/account
-      - modules
-      - versions
 
 apply:account:
   extends: .apply
@@ -104,12 +99,6 @@ plan:web:
   extends: .plan
   environment: web
   stage: build
-  rules:
-    - changes:
-      - stacks/web
-      - modules
-      - functions
-      - versions
 
 apply:web:
   extends: .apply
