@@ -18,9 +18,9 @@ resource "aws_s3_bucket" "tf_state" {
 
   logging {
     target_bucket = aws_s3_bucket.logs.id
-    target_prefix = "${var.environ}/s3/"
+    target_prefix = "account/s3/"
   }
-  
+
   lifecycle {
     prevent_destroy = true
   }
