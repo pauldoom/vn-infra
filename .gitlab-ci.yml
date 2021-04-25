@@ -56,16 +56,15 @@ check_fmt:
       || exit_code=$?
     - case $exit_code in
         1) exit 1;;
-        2) echo "CHANGED=true" >> plan.env;;
-        *) echo "CHANGED=false" >> plan.env;;
+        2) echo "CHANGED=true" >> ${CI_PROJECT_DIR}/changed.env;;
+        *) echo "CHANGED=false" >> ${CI_PROJECT_DIR}/changed.env;;
       esac
-    - cat plan.env
   artifacts:
     paths:
       - plans
       - stacks/${CI_ENVIRONMENT_NAME}/.terraform
     reports:
-      dotenv: plan.env
+      dotenv: changed.env
 
 .apply:
   script:
