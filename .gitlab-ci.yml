@@ -100,7 +100,8 @@ account:apply:
       artifacts: true
   when: manual
   only:
-    - main
+    refs:
+      - main
 
 # Static web site
 web:tfsec:
@@ -123,4 +124,5 @@ web:apply:
     - job: web:plan
       artifacts: true
   only:
-    - main
+    refs:
+      - main
