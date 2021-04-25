@@ -1,4 +1,4 @@
-image: hashicorp/terraform:0.15.0
+image: hashicorp/terraform:latest
 
 # NOTE - New accounts must be initialized outside of GitLab CI/CD
 # to setup the S3 state bucket and DynamoDB lock table.
@@ -13,9 +13,11 @@ variables:
   TF_VAR_infra_name: setme
   TF_VAR_root_zone: setme
   TF_VAR_static_site_fqdn: setme
+  TF_VAR_static_dns_record_file: setme_as_file
 
 stages:
   - check_fmt
+  - account_tfsec
   - account_validate
   - account_plan
   - account_apply
@@ -39,6 +41,12 @@ check_fmt:
     - terraform fmt -recursive -diff -check
   except:
     - main
+
+account_tfsec:
+  stage: account_tfsec
+  image: tfsec/tfsec-ci
+  script:
+    - tfsec stacks/account
 
 account_plan:
   environment: account
