@@ -84,6 +84,7 @@ account:tfsec:
     - changes:
       - stacks/account
       - modules
+      - versions
 
 account:plan:
   extends: .plan
@@ -95,6 +96,7 @@ account:plan:
     - changes:
       - stacks/account
       - modules
+      - versions
 
 account:apply:
   extends: .apply
@@ -108,6 +110,7 @@ account:apply:
       changes:
       - stacks/account
       - modules
+      - versions
       when: manual
 
 # Static web site
@@ -119,6 +122,8 @@ web:tfsec:
     - changes:
       - stacks/web
       - modules
+      - functions
+      - versions
 
 web:plan:
   extends: .plan
@@ -130,6 +135,8 @@ web:plan:
     - changes:
       - stacks/web
       - modules
+      - functions
+      - versions
 
 web:apply:
   extends: .apply
@@ -143,3 +150,5 @@ web:apply:
       changes:
       - stacks/web
       - modules
+      - functions
+      - versions
