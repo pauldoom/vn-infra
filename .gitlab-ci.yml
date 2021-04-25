@@ -1,3 +1,4 @@
+---
 image: hashicorp/terraform:latest
 
 # NOTE - New accounts must be initialized outside of GitLab CI/CD
@@ -18,9 +19,11 @@ variables:
 stages:
   - check_fmt
   - account_tfsec
-  - account_validate
   - account_plan
   - account_apply
+  - web_tfsec
+  - web_plan
+  - web_apply
 
 before_script:
   # Default setup for most stages
@@ -34,44 +37,75 @@ before_script:
     -backend-config="dynamodb_table=${TF_VAR_lock_table}"
     -backend-config="region=${TF_VAR_region}"
 
+# Universal stages
 check_fmt:
   stage: check_fmt
   before_script: []
   script:
     - terraform fmt -recursive -diff -check
-  except:
-    - main
 
-account_tfsec:
-  environment: account
-  stage: account_tfsec
+# Templates
+.tfsec: &tfsec
+  image: tfsec/tfsec-ci
   before_script:
     - . bin/commonlib
     - init_tf_vars $TF_VAR_infra_name $CI_ENVIRONMENT_NAME
-  image: tfsec/tfsec-ci
   script:
     - tfsec stacks/$CI_ENVIRONMENT_NAME
+  needs:
+    - job: check_fmt
 
-account_plan:
-  environment: account
-  stage: account_plan
+.plan: &plan
   script:
     - terraform plan -out ${CI_PROJECT_DIR}/plans/${CI_ENVIRONMENT_NAME}.plan
+  needs:
+    - job: ${CI_ENVIRONMENT_NAME}_tfsec
   artifacts:
     paths:
       - plans
       - stacks/${CI_ENVIRONMENT_NAME}/.terraform
+
+.apply: &apply
+  script:
+    - terraform apply -auto-approve
+      ${CI_PROJECT_DIR}/plans/${CI_ENVIRONMENT_NAME}.plan
+  needs:
+    - job: ${CI_ENVIRONMENT_NAME}_plan
+      artifacts: true
+
+# Prod account level resources
+account_tfsec:
+  <<: *tfsec
+  environment: account
+  stage: account_tfsec
+
+account_plan:
+  <<: *plan
+  environment: account
+  stage: account_plan
+
+account_apply:
+  <<: *apply
+  environment: account
+  stage: account_apply
+  when: manual
   only:
     - main
 
-account_apply:
-  environment: account
-  stage: account_apply
-  script:
-    - terraform apply -auto-approve ${CI_PROJECT_DIR}/plans/${CI_ENVIRONMENT_NAME}.plan
-  needs:
-    - job: account_plan
-      artifacts: true
-  when: manual
+# Static web site
+web_tfsec:
+  <<: *tfsec
+  environment: web
+  stage: web_tfsec
+
+web_plan:
+  <<: *plan
+  environment: web
+  stage: web_plan
+
+web_apply:
+  <<: *apply
+  environment: web
+  stage: web_apply
   only:
     - main
