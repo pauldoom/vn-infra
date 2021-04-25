@@ -1,5 +1,7 @@
-
 # Account level general log bucket
+
+# Allow versioning to be off for log bucket
+# tfsec:ignore:AWS077
 resource "aws_s3_bucket" "logs" {
   bucket = var.log_bucket
   acl    = "log-delivery-write"
