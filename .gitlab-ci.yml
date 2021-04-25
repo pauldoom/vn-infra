@@ -43,6 +43,7 @@ check_fmt:
     - main
 
 account_tfsec:
+  environment: account
   stage: account_tfsec
   before_script:
     - . bin/commonlib
