@@ -1,3 +1,7 @@
+# CloudFront distribution with S3 bucket OAI
+
+# Allow running without WAF - This is staic!
+# tfsec:ignore:AWS045
 resource "aws_cloudfront_distribution" "static_site" {
   depends_on = [
     aws_s3_bucket.static_bucket,
@@ -48,7 +52,7 @@ resource "aws_cloudfront_distribution" "static_site" {
 
   viewer_certificate {
     acm_certificate_arn      = var.acm_certificate_arn
-    minimum_protocol_version = "TLSv1.2_2018"
+    minimum_protocol_version = "TLSv1.2_2019"
     ssl_support_method       = "sni-only"
   }
 
