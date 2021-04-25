@@ -74,6 +74,7 @@ test:tfsec:
 
 .apply:
   script:
+    - if [ $CHANGED == "false" ]; then echo "No change"; exit 0; fi
     - terraform apply -auto-approve
       ${CI_PROJECT_DIR}/plans/${CI_ENVIRONMENT_NAME}.plan
     
@@ -91,7 +92,7 @@ apply:account:
     - job: plan:account
       artifacts: true
   rules:
-    - if: '$CI_COMMIT_BRANCH == "main" && $CHANGED == "true"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
       when: manual
 
 # Static web site
@@ -108,4 +109,4 @@ apply:web:
     - job: plan:web
       artifacts: true
   rules:
-    - if: '$CI_COMMIT_BRANCH == "main" && $CHANGED == "true"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
