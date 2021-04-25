@@ -17,13 +17,9 @@ variables:
   TF_VAR_static_dns_record_file: setme_as_file
 
 stages:
-  - check_fmt
-  - account_tfsec
-  - account_plan
-  - account_apply
-  - web_tfsec
-  - web_plan
-  - web_apply
+  - test
+  - build
+  - deploy
 
 before_script:
   # Default setup for most stages
@@ -39,7 +35,7 @@ before_script:
 
 # Universal stages
 check_fmt:
-  stage: check_fmt
+  stage: test
   before_script: []
   script:
     - terraform fmt -recursive -diff -check
@@ -52,8 +48,6 @@ check_fmt:
     - init_tf_vars $TF_VAR_infra_name $CI_ENVIRONMENT_NAME
   script:
     - tfsec stacks/$CI_ENVIRONMENT_NAME
-  needs:
-    - job: check_fmt
 
 .plan:
   script:
@@ -65,8 +59,6 @@ check_fmt:
         1) exit 1;;
         2) echo "CHANGED=true" >> plan.env;;
       esac  
-  needs:
-    - job: ${CI_ENVIRONMENT_NAME}_tfsec
   artifacts:
     paths:
       - plans
@@ -78,9 +70,6 @@ check_fmt:
   script:
     - terraform apply -auto-approve
       ${CI_PROJECT_DIR}/plans/${CI_ENVIRONMENT_NAME}.plan
-  needs:
-    - job: ${CI_ENVIRONMENT_NAME}_plan
-      artifacts: true
   only:
     variables:
       - $CHANGED == "true"
@@ -89,17 +78,20 @@ check_fmt:
 account:tfsec:
   extends: .tfsec
   environment: account
-  stage: account_tfsec
+  stage: test
 
 account:plan:
   extends: .plan
   environment: account
-  stage: account_plan
+  stage: build
 
 account:apply:
   extends: .apply
   environment: account
-  stage: account_apply
+  stage: deploy
+  needs:
+    - job: account:plan
+      artifacts: true
   when: manual
   only:
     - main
@@ -108,16 +100,19 @@ account:apply:
 web:tfsec:
   extends: .tfsec
   environment: web
-  stage: web_tfsec
+  stage: test
 
 web:plan:
   extends: .plan
   environment: web
-  stage: web_plan
+  stage: build
 
 web:apply:
   extends: .apply
   environment: web
-  stage: web_apply
+  stage: deploy
+  needs:
+    - job: web:plan
+      artifacts: true
   only:
     - main
