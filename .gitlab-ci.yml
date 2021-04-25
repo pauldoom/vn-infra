@@ -45,7 +45,7 @@ check_fmt:
     - terraform fmt -recursive -diff -check
 
 # Templates
-.tfsec: &tfsec
+.tfsec:
   image: tfsec/tfsec-ci
   before_script:
     - . bin/commonlib
@@ -55,37 +55,49 @@ check_fmt:
   needs:
     - job: check_fmt
 
-.plan: &plan
+.plan:
   script:
-    - terraform plan -out ${CI_PROJECT_DIR}/plans/${CI_ENVIRONMENT_NAME}.plan
+    - terraform plan -detailed-exitcode
+      -out ${CI_PROJECT_DIR}/plans/${CI_ENVIRONMENT_NAME}.plan
+      || exit_code=$?
+    - case $exit_code in
+        0) echo "CHANGED=false" >> plan.env;;
+        1) exit 1;;
+        2) echo "CHANGED=true" >> plan.env;;
+      esac  
   needs:
     - job: ${CI_ENVIRONMENT_NAME}_tfsec
   artifacts:
     paths:
       - plans
       - stacks/${CI_ENVIRONMENT_NAME}/.terraform
+    reports:
+      dotenv: plan.env
 
-.apply: &apply
+.apply:
   script:
     - terraform apply -auto-approve
       ${CI_PROJECT_DIR}/plans/${CI_ENVIRONMENT_NAME}.plan
   needs:
     - job: ${CI_ENVIRONMENT_NAME}_plan
       artifacts: true
-
+  only:
+    variables:
+      - $CHANGED == "true"
+    
 # Prod account level resources
-account_tfsec:
-  <<: *tfsec
+account:tfsec:
+  extends: .tfsec
   environment: account
   stage: account_tfsec
 
-account_plan:
-  <<: *plan
+account:plan:
+  extends: .plan
   environment: account
   stage: account_plan
 
-account_apply:
-  <<: *apply
+account:apply:
+  extends: .apply
   environment: account
   stage: account_apply
   when: manual
@@ -93,18 +105,18 @@ account_apply:
     - main
 
 # Static web site
-web_tfsec:
-  <<: *tfsec
+web:tfsec:
+  extends: .tfsec
   environment: web
   stage: web_tfsec
 
-web_plan:
-  <<: *plan
+web:plan:
+  extends: .plan
   environment: web
   stage: web_plan
 
-web_apply:
-  <<: *apply
+web:apply:
+  extends: .apply
   environment: web
   stage: web_apply
   only:
