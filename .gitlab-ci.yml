@@ -22,7 +22,8 @@ stages:
   - test
   - build
   - deploy
-  - maintenance
+  - dependency_check
+  - dependency_request
 
 before_script:
   # Default setup for most stages
@@ -137,17 +138,17 @@ apply:account:
       artifacts: true
 
 # stages/account maintenance
-update:account:terraform_lock:
+update_terraform_lock:account:
   extends: .update_terraform_lock
   environment: account
-  stage: maintenance
+  stage: dependency_check
 
-update:account:create_update_mr:
+create_update_mr:account:
   extends: .create_update_mr
   environment: account
-  stage: maintenance
+  stage: dependency_request
   needs:
-    - job: update:account:terraform_lock
+    - job: update_terraform_lock:account
       artifacts: true
 
 # Static web site
