@@ -11,6 +11,8 @@ variables:
   AWS_SECRET_ACCESS_KEY: setme
   AWS_ACOUNT_ID: setme
   AWS_DEFAULT_REGION: setme
+  # TODO - Too much power!  Should have a developer role user for submitting MRs
+  GITLAB_PRIVATE_TOKEN: setme
   TF_VAR_infra_name: setme
   TF_VAR_root_zone: setme
   TF_VAR_static_site_fqdn: setme
@@ -20,6 +22,7 @@ stages:
   - test
   - build
   - deploy
+  - maintenance
 
 before_script:
   # Default setup for most stages
@@ -36,6 +39,8 @@ before_script:
 # Universal stages
 test:fmt:
   stage: test
+  except:
+    - schedules
   before_script: []
   script:
     - terraform fmt -recursive -diff -check
@@ -44,6 +49,8 @@ test:fmt:
 test:tfsec:
   stage: test
   image: tfsec/tfsec-ci
+  except:
+    - schedules
   before_script:
     - . bin/commonlib
     - init_tf_vars $TF_VAR_infra_name account
@@ -52,6 +59,8 @@ test:tfsec:
 
 # Templates
 .plan:
+  except:
+    - schedules
   script:
     - terraform plan -detailed-exitcode
       -out ${CI_PROJECT_DIR}/plans/${CI_ENVIRONMENT_NAME}.plan
@@ -73,11 +82,46 @@ test:tfsec:
       dotenv: changed.env
 
 .apply:
+  # only/except not allowed with rules, so schedule skipped here
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main" && $CI_PIPELINE_SOURCE != "schedule"'
+      when: manual
   script:
     - if [ $CHANGED == "false" ]; then echo "No change"; exit 0; fi
     - terraform apply -auto-approve
       ${CI_PROJECT_DIR}/plans/${CI_ENVIRONMENT_NAME}.plan
-    
+
+.update_terraform_lock:
+  only:
+    - schedules
+  before_script:
+    - . bin/commonlib
+    - init_tf_vars $TF_VAR_infra_name $CI_ENVIRONMENT_NAME
+    - cd stacks/$CI_ENVIRONMENT_NAME
+  script:
+    - rm -f .terraform.lock.hcl
+    - terraform init
+      -backend-config="bucket=${TF_VAR_state_bucket}"
+      -backend-config="key=${TF_VAR_stack_name}"
+      -backend-config="dynamodb_table=${TF_VAR_lock_table}"
+      -backend-config="region=${TF_VAR_region}"
+  artifacts:
+    paths:
+     - stacks/${CI_ENVIRONMENT_NAME}/.terraform.lock.hcl
+
+.create_update_mr:
+  only:
+    - schedules
+  image: registry.gitlab.com/gitlab-automation-toolkit/gitlab-auto-mr
+  before_script: []
+  script:
+    - git checkout -b maintenance/
+    - git add -A
+    - git diff --exit-code --staged && echo "No changes detected" && exit 0
+    - git commit -m "${CI_ENVIRONMENT_NAME} dependency update ${CI_JOB_STARTED_AT}"
+    # TODO - This uses a Project Access Token with API and repo write access - Not secure enough!
+    - gitlab_auto_mr -t main -c WIP -d .gitlab/mr_templates/auto_dependency.md -r -s
+
 # Prod account level resources
 plan:account:
   extends: .plan
@@ -91,9 +135,20 @@ apply:account:
   needs:
     - job: plan:account
       artifacts: true
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
-      when: manual
+
+# stages/account maintenance
+update:account:terraform_lock:
+  extends: .update_terraform_lock
+  environment: account
+  stage: maintenance
+
+update:account:create_update_mr:
+  extends: .create_update_mr
+  environment: account
+  stage: maintenance
+  needs:
+    - job: update:account:terraform_lock
+      artifacts: true
 
 # Static web site
 plan:web:
@@ -108,5 +163,3 @@ apply:web:
   needs:
     - job: plan:web
       artifacts: true
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
