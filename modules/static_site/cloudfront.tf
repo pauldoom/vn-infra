@@ -28,7 +28,6 @@ resource "aws_cloudfront_distribution" "static_site" {
     allowed_methods  = ["HEAD", "GET"]
     cached_methods   = ["HEAD", "GET"]
     target_origin_id = "static-${var.environ}"
-
     lambda_function_association {
       event_type   = "origin-request"
       lambda_arn   = var.redirect_lambda_arn
@@ -47,7 +46,7 @@ resource "aws_cloudfront_distribution" "static_site" {
     default_ttl = 86400
     max_ttl     = 31536000
 
-    viewer_protocol_policy = "https-only"
+    viewer_protocol_policy = "redirect-to-https"
     compress               = true
   }
 
