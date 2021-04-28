@@ -12,6 +12,7 @@ resource "aws_cloudfront_distribution" "static_site" {
     #  https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/DownloadDistS3AndCustomOrigins.html#concept_S3Origin
     domain_name = aws_s3_bucket.static_bucket.bucket_regional_domain_name
     origin_id   = "static-${var.environ}"
+    origin_path = "/public"
     s3_origin_config {
       origin_access_identity = aws_cloudfront_origin_access_identity.cloudfront_oai.cloudfront_access_identity_path
     }
