@@ -1,5 +1,5 @@
 module "waiting_room_lambda" {
-  source              = "../../modules/waiting_room"
+  source              = "../../modules/lambda_function"
   environ             = var.environ
   function_name       = "waiting_room"
   function_entrypoint = "waitin_room.handler"
