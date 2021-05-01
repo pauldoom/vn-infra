@@ -116,12 +116,13 @@ test:tfsec:
   image: registry.gitlab.com/gitlab-automation-toolkit/gitlab-auto-mr
   before_script: []
   script:
-    - git checkout -b maintenance/
+    - git checkout -b maintenance-xyz/
     - git add -A
     - git diff --exit-code --staged && echo "No changes detected" && exit 0
     - git commit -m "${CI_ENVIRONMENT_NAME} dependency update ${CI_JOB_STARTED_AT}"
+    # - git push
     # TODO - This uses a Project Access Token with API and repo write access - Not secure enough!
-    - gitlab_auto_mr -t main -c WIP -d .gitlab/mr_templates/auto_dependency.md -r -s
+    - gitlab_auto_mr --source-branch maintenance-xyz -t main -c WIP -d .gitlab/mr_templates/auto_dependency.md -r -s
 
 # Prod account level resources
 plan:account:
@@ -138,18 +139,19 @@ apply:account:
       artifacts: true
 
 # stages/account maintenance
-update_terraform_lock:account:
-  extends: .update_terraform_lock
-  environment: account
-  stage: dependency_check
+# TODO - Needs work
+# update_terraform_lock:account:
+#   extends: .update_terraform_lock
+#   environment: account
+#   stage: dependency_check
 
-create_update_mr:account:
-  extends: .create_update_mr
-  environment: account
-  stage: dependency_request
-  needs:
-    - job: update_terraform_lock:account
-      artifacts: true
+# create_update_mr:account:
+#   extends: .create_update_mr
+#   environment: account
+#   stage: dependency_request
+#   needs:
+#     - job: update_terraform_lock:account
+#       artifacts: true
 
 # Static web site
 plan:web:
