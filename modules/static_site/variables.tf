@@ -3,6 +3,21 @@ variable "acm_certificate_arn" {
   type        = string
 }
 
+variable "always_allow" {
+  description = "Map of items to always allow, bypassing Lambda@Edge logic"
+  type = map(string)
+  default = {
+    css = "/css/*",
+    fontawesome = "/fontawesome/*",
+    fonts = "/fonts/*",
+    images = "/images/*",
+    img = "/img/*",
+    js = "/js/*",
+    robots = "/robots.txt",
+    sitemap = "/sitemap.xml",
+  }
+}
+
 variable "bucket_suffix" {
   description = "Name to append to end of S3 bucket name for global uniqueness"
   type        = string
@@ -30,5 +45,10 @@ variable "redirect_lambda_arn" {
 
 variable "root_zone" {
   description = "Parent DNS zone name"
+  type        = string
+}
+
+variable "waiting_room_lambda_arn" {
+  description = "ARN for Lambda to run at edge for managing the waiting room"
   type        = string
 }

@@ -16,7 +16,7 @@ module "static_site_redirect_lambda" {
   environ             = var.environ
   function_name       = "redirect"
   function_entrypoint = "redirect.handler"
-  runtime             = "nodejs12.x"
+  runtime             = "nodejs14.x"
 
   # Always provision in us-east-1 for Lambda@Edge use
   providers = {
@@ -25,13 +25,13 @@ module "static_site_redirect_lambda" {
 }
 
 module "static_site_hosting" {
-  source              = "../../modules/static_site"
-  acm_certificate_arn = module.static_site_acm.acm_cert_arn
-  bucket_suffix       = var.bucket_suffix
-  environ             = var.environ
-  fqdn                = var.static_site_fqdn
-  log_bucket          = var.log_bucket
-  redirect_lambda_arn = module.static_site_redirect_lambda.qualified_arn
-  root_zone           = var.root_zone
-
+  source                  = "../../modules/static_site"
+  acm_certificate_arn     = module.static_site_acm.acm_cert_arn
+  bucket_suffix           = var.bucket_suffix
+  environ                 = var.environ
+  fqdn                    = var.static_site_fqdn
+  log_bucket              = var.log_bucket
+  redirect_lambda_arn     = module.static_site_redirect_lambda.qualified_arn
+  root_zone               = var.root_zone
+  waiting_room_lambda_arn = module.waiting_room_lambda.qualified_arn
 }

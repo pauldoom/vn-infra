@@ -18,6 +18,15 @@ resource "aws_cloudfront_distribution" "static_site" {
     }
   }
 
+  origin {
+    domain_name = aws_s3_bucket.static_bucket.bucket_regional_domain_name
+    origin_id   = "waiting_room-${var.environ}"
+    origin_path = "/waiting_room"
+    s3_origin_config {
+      origin_access_identity = aws_cloudfront_origin_access_identity.cloudfront_oai.cloudfront_access_identity_path
+    }
+  }
+
   enabled         = true
   is_ipv6_enabled = true
   aliases         = [var.fqdn, "www.${var.fqdn}"]
@@ -28,6 +37,12 @@ resource "aws_cloudfront_distribution" "static_site" {
     allowed_methods  = ["HEAD", "GET"]
     cached_methods   = ["HEAD", "GET"]
     target_origin_id = "static-${var.environ}"
+  
+    lambda_function_association {
+      event_type   = "viewer-request"
+      lambda_arn   = var.waiting_room_lambda_arn
+      include_body = false
+    }
     lambda_function_association {
       event_type   = "origin-request"
       lambda_arn   = var.redirect_lambda_arn
@@ -43,7 +58,55 @@ resource "aws_cloudfront_distribution" "static_site" {
     }
 
     min_ttl     = 0
-    default_ttl = 86400
+    default_ttl = 60
+    max_ttl     = 31536000
+
+    viewer_protocol_policy = "redirect-to-https"
+    compress               = true
+  }
+
+  # Allow asset access regardless of status
+  dynamic "ordered_cache_behavior" {
+    for_each = var.always_allow
+
+    content {
+      path_pattern = ordered_cache_behavior.value
+      allowed_methods  = ["HEAD", "GET"]
+      cached_methods   = ["HEAD", "GET"]
+      target_origin_id = "static-${var.environ}"
+      forwarded_values {
+        query_string = false
+
+        cookies {
+          forward = "none"
+        }
+      }
+
+      min_ttl     = 0
+      default_ttl = 60
+      max_ttl     = 31536000
+
+      viewer_protocol_policy = "redirect-to-https"
+      compress               = true
+    }
+  }
+
+  ordered_cache_behavior {
+    path_pattern = "/waiting_room/*"
+    allowed_methods  = ["HEAD", "GET"]
+    cached_methods   = ["HEAD", "GET"]
+    target_origin_id = "waiting_room-${var.environ}"
+
+    forwarded_values {
+      query_string = false
+
+      cookies {
+        forward = "none"
+      }
+    }
+
+    min_ttl     = 0
+    default_ttl = 60
     max_ttl     = 31536000
 
     viewer_protocol_policy = "redirect-to-https"

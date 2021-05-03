@@ -1,42 +1,37 @@
-/* Based on AWS example from https://aws.amazon.com/blogs/networking-and-content-delivery/visitor-prioritization-on-e-commerce-websites-with-cloudfront-and-lambdaedge/ */
+/* This is a viewer-request function that redirects new users to a waiting room */
+/* while allowing a certain subset through to the origin, along with all returning users  */
+/* Based on the example from https://aws.amazon.com/blogs/networking-and-content-delivery/visitor-prioritization-on-e-commerce-websites-with-cloudfront-and-lambdaedge/ */
+/* When things break check out https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/lambda-edge-testing-debugging.html */
 /* Includes concepts from https://aws.amazon.com/blogs/networking-and-content-delivery/leveraging-external-data-in-lambdaedge/ */
+/* ... and some tips from https://medium.com/@mnylen/lambda-edge-gotchas-and-tips-93083f8b4152 */
 'use strict';
-/*
- * A flag indicating whether the origin is ready to accept traffic. It's
- * a static value for this example, but you could instead read the value
- * from an S3 bucket with restricted access, a DynamoDB table,
- * or the CloudFront cache.
- */
-const originAcceptingTraffic = true;
 
 /*
  * The origin hit rate (a value between 0 and 1) specifies a percentage of 
  * users that go directly to the origin, while the rest go to
- * a "waiting room." Premium users always go to the origin. If you want
- * to adjust traffic dynamically, you can store and retrieve the origin
- * hit rate value from an S3 bucket, a DynamoDB table, or the CloudFront 
- * cache.
+ * a "waiting room."
  */
-const originHitRate = 0.3;
+const originHitRate = 0.3
+
+const originAcceptingTraffic = true
 
 exports.handler = (event, context, callback) => {
     const request = event.Records[0].cf.request;
 
-    if (!shouldGoToOrigin(request)) {
-        setupWaitingRoom(request);
+    if (!allowToOrigin(request)) {
+        request = redirectToWaitingRoom(request);
     }
 
     callback(null, request);
 };
 
-function shouldGoToOrigin(request) {
+function allowToOrigin(request) {
     if (!originAcceptingTraffic) {
-        console.log("Origin is not accepting any traffic. " +
-                    "All requests go to the waiting room."); 
+        console.log("Origin offline - All users go to the waiting room");
         return false;
     }
-    if (isPremiumUser(request.headers.cookie)) {
-        console.log("A premium user goes to the origin.");
+    if (isReturningUser(request.headers.cookie)) {
+        console.log("A returning user goes to the origin.");
         return true;
     }
     if (Math.random() <= originHitRate) {
@@ -48,38 +43,43 @@ function shouldGoToOrigin(request) {
     return false;
 }
 
-function isPremiumUser(cookies) {
+function isReturningUser(cookies) {
     /* 
-     * You can replace the static cookie value here with
-     * your own custom authentication logic.
+     * Placeholder - Key off something else!
      */
-    const premiumUserCookieName = 'premium-user-cookie';
-    const premiumUserCookieValue = 'some-secret-cookie-value';
+    const cookieName = 'Voltage';
+    const cookieValue = 'Noir';
     const parsedCookies = parseCookies(cookies);
 
-    if (parsedCookies[premiumUserCookieName] &&
-        parsedCookies[premiumUserCookieName] === premiumUserCookieValue) {
-        console.log(`Cookie "${premiumUserCookieName}" has ` +
-                    `a valid secret value of "${premiumUserCookieValue}".`);
+    if (parsedCookies[cookieName] &&
+        parsedCookies[cookieName] === cookieValue) {
+        console.log(`Cookie "${cookieName}" has ` +
+            `a valid secret value of "${cookieValue}".`);
         return true;
     }
 
     return false;
 }
 
-function setupWaitingRoom(request) {
-    const waitingRoomS3 = 'your-waiting-room-bucket.s3.amazonaws.com';
-    request.origin = {
-        s3: {
-            domainName: waitingRoomS3,
-            region: '',
-            authMethod: 'none',
-            path: '/waitingroom',
-            customHeaders: {}
-        }
+function redirectToWaitingRoom(request) {
+    const waitingRoomPath = '/waiting_room/index.html'
+
+    const redirectResponse = {
+        status: '302',
+        statusDescription: 'Found',
+        headers: {
+            'location': [{
+                key: 'Location',
+                value: waitingRoomPath,
+            }],
+            'cache-control': [{
+                key: 'Cache-Control',
+                value: "private"
+            }],
+        },
     };
-    request.headers['host'] = [{ key: 'host', value: waitingRoomS3 }];
-    request.uri = '/please-try-again.html';
+
+    return redirectResponse
 }
 
 function parseCookies(cookies) {
