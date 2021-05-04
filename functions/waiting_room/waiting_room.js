@@ -16,7 +16,7 @@ const originHitRate = 0.3
 const originAcceptingTraffic = true
 
 exports.handler = (event, context, callback) => {
-    const request = event.Records[0].cf.request;
+    let request = event.Records[0].cf.request;
 
     if (!allowToOrigin(request)) {
         request = redirectToWaitingRoom(request);
