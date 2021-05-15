@@ -60,4 +60,3 @@ resource "aws_cloudwatch_log_group" "function" {
   retention_in_days = 30
   kms_key_id        = aws_kms_key.log_cmk.key_id
 }
-}
