@@ -37,7 +37,7 @@ resource "aws_cloudfront_distribution" "static_site" {
     allowed_methods  = ["HEAD", "GET"]
     cached_methods   = ["HEAD", "GET"]
     target_origin_id = "static-${var.environ}"
-  
+
     lambda_function_association {
       event_type   = "viewer-request"
       lambda_arn   = var.waiting_room_lambda_arn
@@ -70,7 +70,7 @@ resource "aws_cloudfront_distribution" "static_site" {
     for_each = var.always_allow
 
     content {
-      path_pattern = ordered_cache_behavior.value
+      path_pattern     = ordered_cache_behavior.value
       allowed_methods  = ["HEAD", "GET"]
       cached_methods   = ["HEAD", "GET"]
       target_origin_id = "static-${var.environ}"
@@ -92,7 +92,7 @@ resource "aws_cloudfront_distribution" "static_site" {
   }
 
   ordered_cache_behavior {
-    path_pattern = "/waiting_room/*"
+    path_pattern     = "/waiting_room/*"
     allowed_methods  = ["HEAD", "GET"]
     cached_methods   = ["HEAD", "GET"]
     target_origin_id = "waiting_room-${var.environ}"
