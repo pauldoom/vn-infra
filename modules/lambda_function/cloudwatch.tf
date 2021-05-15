@@ -1,7 +1,22 @@
 # Customer Master Key for CloudWatch use
 data "aws_iam_policy_document" "log_cmk_policy" {
   statement {
-    sid    = "AllowCloudWatchToLogCMK"
+    sid    = "AllowRoot"
+    effect = "Allow"
+    principals {
+      type        = "AWS"
+      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
+    }
+
+    actions = [
+      "kms:*",
+    ]
+
+    resources = ["*"]
+  }
+
+  statement {
+    sid    = "AllowCloudWatch"
     effect = "Allow"
     principals {
       type        = "Service"
