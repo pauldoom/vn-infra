@@ -59,6 +59,7 @@ resource "aws_cloudwatch_log_group" "function" {
   name              = "/aws/lambda/${data.aws_region.current.name}.${var.environ}_${var.function_name}"
   retention_in_days = 30
   # kms_key_id is OBVIOUSLY the ARN of the key.... ARGH!  SMH.
+  # This will pass a plan too.
   # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group#kms_key_id
-  kms_key_id        = aws_kms_key.log_cmk.arn
+  kms_key_id = aws_kms_key.log_cmk.arn
 }
