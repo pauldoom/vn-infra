@@ -58,5 +58,6 @@ resource "aws_kms_alias" "log_cmk" {
 resource "aws_cloudwatch_log_group" "function" {
   name              = "/aws/lambda/${data.aws_region.current.name}.${var.environ}_${var.function_name}"
   retention_in_days = 30
-  kms_key_id        = aws_kms_alias.log_cmk.target_key_id
+  kms_key_id        = aws_kms_key.log_cmk.key_id
+}
 }
