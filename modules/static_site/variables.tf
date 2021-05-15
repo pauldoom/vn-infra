@@ -5,16 +5,16 @@ variable "acm_certificate_arn" {
 
 variable "always_allow" {
   description = "Map of items to always allow, bypassing Lambda@Edge logic"
-  type = map(string)
+  type        = map(string)
   default = {
-    css = "/css/*",
+    css         = "/css/*",
     fontawesome = "/fontawesome/*",
-    fonts = "/fonts/*",
-    images = "/images/*",
-    img = "/img/*",
-    js = "/js/*",
-    robots = "/robots.txt",
-    sitemap = "/sitemap.xml",
+    fonts       = "/fonts/*",
+    images      = "/images/*",
+    img         = "/img/*",
+    js          = "/js/*",
+    robots      = "/robots.txt",
+    sitemap     = "/sitemap.xml",
   }
 }
 
