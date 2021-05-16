@@ -7,28 +7,6 @@ data "archive_file" "lambda_zip" {
   source_dir  = "${path.module}/../../functions/${var.function_name}/"
 }
 
-resource "aws_iam_role_policy" "lambda_execution" {
-  name_prefix = "lambda-execution-policy-"
-  role        = aws_iam_role.lambda_execution.id
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": [
-        "logs:CreateLogStream",
-        "logs:PutLogEvents",
-        "logs:CreateLogGroup"
-      ],
-      "Effect": "Allow",
-      "Resource": "*"
-    }
-  ]
-}
-EOF
-}
-
 resource "aws_iam_role" "lambda_execution" {
   name_prefix        = "lambda-execution-role-"
   description        = "Managed by Terraform"
@@ -52,6 +30,28 @@ resource "aws_iam_role" "lambda_execution" {
 EOF
 }
 
+resource "aws_iam_role_policy" "lambda_execution" {
+  name_prefix = "lambda-execution-policy-"
+  role        = aws_iam_role.lambda_execution.id
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "logs:CreateLogStream",
+        "logs:PutLogEvents",
+        "logs:CreateLogGroup"
+      ],
+      "Effect": "Allow",
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+
 resource "aws_lambda_function" "function" {
   description      = "Managed by Terraform"
   filename         = "${path.module}/../../functions/${var.function_name}.zip"
@@ -61,8 +61,4 @@ resource "aws_lambda_function" "function" {
   publish          = true
   role             = aws_iam_role.lambda_execution.arn
   runtime          = var.runtime
-
-  depends_on = [
-    aws_cloudwatch_log_group.function
-  ]
 }
