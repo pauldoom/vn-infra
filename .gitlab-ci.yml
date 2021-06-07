@@ -47,6 +47,18 @@ test:fmt:
     - terraform fmt -recursive -diff -check
 
 # Run tfsec on everything
+test:tfsec:
+  stage: test
+  image: tfsec/tfsec-ci
+  except:
+    - schedules
+  before_script:
+    - . bin/commonlib
+    - init_tf_vars $TF_VAR_infra_name account
+  script:
+    - tfsec stacks
+
+# Run terrascan on everything
 test:terrascan:
   stage: test
   image:
@@ -57,7 +69,6 @@ test:terrascan:
   script:
     - /go/bin/terrascan scan stacks
 
-# Run terrascan on everything
 # Templates
 .plan:
   except:
