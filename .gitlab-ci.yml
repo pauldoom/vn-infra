@@ -46,18 +46,18 @@ test:fmt:
   script:
     - terraform fmt -recursive -diff -check
 
-# Run tfsec on everything at
-test:tfsec:
+# Run tfsec on everything
+test:terrascan:
   stage: test
-  image: tfsec/tfsec-ci
+  image:
+    name: accurics/terrascan:latest
+    entrypoint: ["/bin/sh", "-c"]
   except:
     - schedules
-  before_script:
-    - . bin/commonlib
-    - init_tf_vars $TF_VAR_infra_name account
   script:
-    - tfsec stacks
+    - /go/bin/terrascan scan stacks
 
+# Run terrascan on everything
 # Templates
 .plan:
   except:
