@@ -16,6 +16,18 @@ resource "aws_route53_record" "alias_static_site" {
   }
 }
 
+resource "aws_route53_record" "aliasv6_static_site" {
+  zone_id = data.aws_route53_zone.root_zone.zone_id
+  name    = var.fqdn
+  type    = "AAAA"
+
+  alias {
+    name                   = aws_cloudfront_distribution.static_site.domain_name
+    zone_id                = aws_cloudfront_distribution.static_site.hosted_zone_id
+    evaluate_target_health = false
+  }
+}
+
 # WWW
 resource "aws_route53_record" "alias_static_site_www" {
   zone_id = data.aws_route53_zone.root_zone.zone_id
@@ -24,5 +36,4 @@ resource "aws_route53_record" "alias_static_site_www" {
   ttl     = "300"
 
   records = [var.fqdn]
-
 }
