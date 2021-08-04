@@ -10,6 +10,7 @@ module "root_dns_zone" {
   region         = var.region
   root_zone      = var.root_zone
   static_records = local.static_dns_records
+  alarm_actions  = []
 
   # External zones are global
   providers = {

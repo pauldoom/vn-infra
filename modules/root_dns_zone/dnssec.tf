@@ -57,10 +57,10 @@ resource "aws_route53_hosted_zone_dnssec" "root_zone" {
 
 output "root_zone_key_signing_key" {
   description = "DNSSEC Key Signing Key"
-  value       = {
-    digest_algorithm = aws_route53_key_signing_key.root_zone.digest_algorithm_mnemonic,
-    digest_value = aws_route53_key_signing_key.root_zone.digest_value,
+  value = {
+    digest_algorithm  = aws_route53_key_signing_key.root_zone.digest_algorithm_mnemonic,
+    digest_value      = aws_route53_key_signing_key.root_zone.digest_value,
     signing_algorithm = aws_route53_key_signing_key.root_zone.signing_algorithm_mnemonic,
-    ds_record = aws_route53_key_signing_key.root_zone.ds_record
+    ds_record         = aws_route53_key_signing_key.root_zone.ds_record
   }
 }
