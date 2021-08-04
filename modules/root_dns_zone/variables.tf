@@ -1,3 +1,16 @@
+variable "alarm_actions" {
+  description = "List of actions to trigger on transition between OK and ALARM states"
+  # See https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/AlarmThatSendsEmail.html#alarms-and-actions
+  # for more on the types of actions.
+  type    = list(string)
+  default = []
+}
+
+variable "default_ttl" {
+  description = "Default TTL for records"
+  type        = string
+  default     = "300"
+}
 variable "region" {
   description = "AWS region to create resources in by default"
   type        = string
@@ -8,11 +21,6 @@ variable "root_zone" {
   description = "Top level DNS zone name"
 }
 
-variable "default_ttl" {
-  description = "Default TTL for records"
-  type        = string
-  default     = "300"
-}
 terraform {
   # Allow use of optional() below
   experiments = [module_variable_optional_attrs]
