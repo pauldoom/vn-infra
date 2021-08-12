@@ -15,3 +15,14 @@ top level table per-account/region.
 as needed and is safe to rerun.
 
 The `stacks/account` stack is used to track these resources.
+
+## Local Terraform variables
+
+This is intended to be used in CI/CD, with variables set via TF_VAR_variablename
+environment variables.
+
+For local runs, you can create a file named `.auto.tfvars` under
+the `stacks/` directory you wish to configure.  These files
+will not be tracked in Git.
+
+
