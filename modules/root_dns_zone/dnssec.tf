@@ -1,14 +1,6 @@
-<<<<<<< Updated upstream
-resource "aws_kms_key" "dnssec_root_zone" {
-  customer_master_key_spec = "ECC_NIST_P256"
-  deletion_window_in_days  = 7
-  key_usage                = "SIGN_VERIFY"
-  policy = jsonencode({
-=======
 locals {
   alias_prefix = replace(var.root_zone, "/\\./", "_")
   ksk_policy = jsonencode({
->>>>>>> Stashed changes
     Statement = [
       {
         Action = [
