@@ -6,7 +6,7 @@ functions/*.zip
 
 # Local files for workstation or temporary CI/CD use
 local.*
-.auto.tfvars
+*.tfvars
 
 # Cached plans
 plans/
