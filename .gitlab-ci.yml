@@ -1,5 +1,5 @@
 ---
-image: hashicorp/terraform:latest
+image: hashicorp/terraform:1.0.7
 
 # NOTE - New accounts must be initialized outside of GitLab CI/CD
 # to setup the S3 state bucket and DynamoDB lock table.
