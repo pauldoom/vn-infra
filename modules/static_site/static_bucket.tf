@@ -43,6 +43,15 @@ resource "aws_s3_bucket" "static_bucket" {
   # }
 }
 
+resource "aws_s3_bucket_public_access_block" "static_bucket" {
+  bucket = aws_s3_bucket.static_bucket.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
 data "aws_iam_policy_document" "static_bucket_policy" {
   # Allow CloudFront OAI to access items
   statement {
