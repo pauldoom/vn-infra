@@ -57,7 +57,7 @@ test:tfsec:
     - . bin/commonlib
     - init_tf_vars $TF_VAR_infra_name account
   script:
-    - tfsec stacks
+    - tfsec stacks/
 
 # Run terrascan on everything
 test:terrascan:
@@ -67,8 +67,11 @@ test:terrascan:
     entrypoint: ["/bin/sh", "-c"]
   except:
     - schedules
+  before_script:
+    - . bin/commonlib
+    - init_tf_vars $TF_VAR_infra_name account
   script:
-    - /go/bin/terrascan scan stacks
+    - /go/bin/terrascan scan stacks/
 
 # Templates
 .plan:
