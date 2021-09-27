@@ -30,28 +30,13 @@ resource "aws_iam_role" "lambda_execution" {
 EOF
 }
 
-resource "aws_iam_role_policy" "lambda_execution" {
-  name_prefix = "lambda-execution-policy-"
-  role        = aws_iam_role.lambda_execution.id
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": [
-        "logs:CreateLogStream",
-        "logs:PutLogEvents",
-        "logs:CreateLogGroup"
-      ],
-      "Effect": "Allow",
-      "Resource": "*"
-    }
-  ]
-}
-EOF
+resource "aws_iam_role_policy_attachment" "lambda_basic_execution_role" {
+  role       = aws_iam_role.lambda_execution.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
+# Ignore missing XRay warning
+# tfsec:ignore:aws-lambda-enable-tracing
 resource "aws_lambda_function" "function" {
   description      = "Managed by Terraform"
   filename         = "${path.module}/../../functions/${var.function_name}.zip"
