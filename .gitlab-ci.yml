@@ -25,17 +25,18 @@ stages:
   - dependency_check
   - dependency_request
 
-before_script:
-  # Default setup for most stages
-  - mkdir -p plans
-  - . bin/commonlib
-  - init_tf_vars $TF_VAR_infra_name $CI_ENVIRONMENT_NAME
-  - cd stacks/$CI_ENVIRONMENT_NAME
-  - terraform init
-    -backend-config="bucket=${TF_VAR_state_bucket}"
-    -backend-config="key=${TF_VAR_stack_name}"
-    -backend-config="dynamodb_table=${TF_VAR_lock_table}"
-    -backend-config="region=${TF_VAR_region}"
+default:
+  before_script:
+    # Default setup for most stages
+    - mkdir -p plans
+    - . bin/commonlib
+    - init_tf_vars $TF_VAR_infra_name $CI_ENVIRONMENT_NAME
+    - cd stacks/$CI_ENVIRONMENT_NAME
+    - terraform init
+      -backend-config="bucket=${TF_VAR_state_bucket}"
+      -backend-config="key=${TF_VAR_stack_name}"
+      -backend-config="dynamodb_table=${TF_VAR_lock_table}"
+      -backend-config="region=${TF_VAR_region}"
 
 # Universal stages
 test:fmt:
