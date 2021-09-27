@@ -60,18 +60,18 @@ test:tfsec:
     - tfsec stacks/
 
 # Run terrascan on everything
-test:terrascan:
-  stage: test
-  image:
-    name: accurics/terrascan:latest
-    entrypoint: ["/bin/sh", "-c"]
-  except:
-    - schedules
-  before_script:
-    - . bin/commonlib
-    - init_tf_vars $TF_VAR_infra_name account
-  script:
-    - /go/bin/terrascan scan stacks/
+#test:terrascan:
+#  stage: test
+#  image:
+#    name: accurics/terrascan:latest
+#    entrypoint: ["/bin/sh", "-c"]
+#  except:
+#    - schedules
+#  before_script:
+#    - . bin/commonlib
+#    - init_tf_vars $TF_VAR_infra_name account
+#  script:
+#    - /go/bin/terrascan scan stacks/
 
 # Templates
 .plan:
