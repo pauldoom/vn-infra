@@ -38,11 +38,15 @@ resource "aws_cloudfront_distribution" "static_site" {
     cached_methods   = ["HEAD", "GET"]
     target_origin_id = "static-${var.environ}"
 
-    lambda_function_association {
-      event_type   = "viewer-request"
-      lambda_arn   = var.waiting_room_lambda_arn
-      include_body = false
+    dynamic "lambda_function_association" {
+      for_each = toset(var.waiting_room_lambda_arn != "" ? ["waiting_room"] : [])
+      content {
+        event_type   = "viewer-request"
+        lambda_arn   = var.waiting_room_lambda_arn
+        include_body = false
+      }
     }
+
     lambda_function_association {
       event_type   = "origin-request"
       lambda_arn   = var.redirect_lambda_arn
