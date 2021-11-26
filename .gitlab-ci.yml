@@ -181,3 +181,17 @@ apply:web:
   needs:
     - job: plan:web
       artifacts: true
+
+plan:v6web:
+  extends: .plan
+  environment: v6web
+  stage: build
+
+apply:v6web:
+  extends: .apply
+  environment: v6web
+  stage: deploy
+  needs:
+    - job: plan:v6web
+      artifacts: true
+
