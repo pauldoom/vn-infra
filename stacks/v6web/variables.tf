@@ -24,7 +24,7 @@ variable "root_zone" {
   type        = string
 }
 
-variable "static_site_fqdn" {
+variable "v6only_site_fqdn" {
   description = "FQDN of static site"
   type        = string
 }
