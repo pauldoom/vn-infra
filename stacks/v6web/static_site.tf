@@ -13,8 +13,8 @@ module "static_site_acm" {
 
 module "static_site_redirect_lambda" {
   source              = "../../modules/lambda_function"
-  environ             = var.environ
-  function_name       = "redirect-si6-${var.bucket_suffix}"
+  environ             = "si6_${var.environ}"
+  function_name       = "redirect"
   function_entrypoint = "redirect.handler"
   runtime             = "nodejs14.x"
 
