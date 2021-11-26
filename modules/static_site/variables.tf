@@ -51,4 +51,11 @@ variable "root_zone" {
 variable "waiting_room_lambda_arn" {
   description = "ARN for Lambda to run at edge for managing the waiting room"
   type        = string
+  default     = ""
+}
+
+variable "ipv6_only" {
+  description = "Set to true to stop serving A records"
+  type        = bool
+  default     = false
 }
